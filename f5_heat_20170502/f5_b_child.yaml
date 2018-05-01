@@ -1,0 +1,212 @@
+# Heat template which intstantiates an B side BIGIP F5 instance with
+# 4 vNICs. 
+#
+# same availability zone.
+#
+# Template requires Juno or above and has been tested on Kilo.
+#
+heat_template_version: 2014-10-16
+
+description: >
+  HOT template to instantiate an B side BIGIP F5 instance with 4 vNICs as part of a nested template
+
+parameters:
+  vnf_id:
+    type: string
+    description: VNF ID of this deployment
+  vm_role:
+    type: string
+    description: Role of these VMs
+  vf_module_id:
+    type: string
+    description: Unique ID for this VF Module instance
+  f5_b_name_0:
+    type: string
+    description: Name of BIGIP VM B instance
+    constraints:
+    - allowed_pattern: '[a-zA-Z0-9][a-zA-Z0-9-]{0,31}$'
+      description: VM B name must be 32 characters or less and a valid hostname.  Only alphanumeric characters plus hyphen are allowed.
+  bigip_image_name:
+    type: string
+    description: Glance image for BIGIP instance
+    constraints:
+    - custom_constraint: glance.image
+  bigip_flavor_name:
+    type: string
+    description: Flavor to use for creating VM instances
+    constraints:
+    - custom_constraint: nova.flavor
+  bigip_keypair:
+    type: string
+    description: Keypair to use for accessing this BIGIP instance
+    constraints:
+    - custom_constraint: nova.keypair
+  availability_zone_0:
+    # Can be commented out along with references if always using a single availability zone
+    type: string
+    description: Availability zone for A instances.
+  availability_zone_1:
+    # Can be commented out along with references if always using a single availability zone
+    type: string
+    description: Availability zone for B instances.  May be the same as A instance.
+  mgmt_net_id:
+    type: string
+    description: Management network id
+    constraints:
+    - custom_constraint: neutron.network
+  f5_b_mgmt_ip_0:
+    type: string
+    description: Fixed IP address to use as management IP of B instance.
+  int_ha_net_id:
+    type: string
+    description: HA network id
+    constraints:
+    - custom_constraint: neutron.network
+  f5_b_int_ha_ip_0:
+    type: string
+    description: Fixed IP address to use as HA IP of B instance.
+  f5_a_int_ha_ip_0:
+    type: string
+    description: Fixed IP address to use as HA IPs of A instance.
+  oam_net_id:
+    type: string
+    description: oam network UUID
+    constraints:
+    - custom_constraint: neutron.network
+  f5_oam_vip_0:
+    type: string
+    description: oam alternate virtual IP address
+  f5_b_oam_ip_0:
+    type: string
+    description: Fixed IP address to use as oam fixed IPs of B instance.
+  bigip_sec_groups:
+    type: comma_delimited_list
+    description: List of security groups to add on trusted interfaces.
+  core_net_id:
+    type: string
+    description: core network UUID
+    constraints:
+    - custom_constraint: neutron.network
+  f5_core_vip_0:
+    type: string
+    description: core ALP
+  f5_b_core_ip_0:
+    type: string
+    description: Fixed IP address to use as core fixed IP of B instance.
+  dmz_net_id:
+    type: string
+    description: dmz network UUID
+    constraints:
+    - custom_constraint: neutron.network
+  f5_dmz_vip_0:
+    type: string
+    description: dmz ALP
+  f5_b_dmz_ip_0:
+    type: string
+    description: Fixed IP address to use as dmz fixed IP of B instance.
+  bigip_server_group:
+    type: string
+    description: Server group to use for these VMs
+
+resources:
+  # BIGIP management ports
+  bigip_b_mgmt_0_port:
+    type: OS::Neutron::Port
+    properties:
+      name:
+        str_replace:
+          template: $VM_mgmt_0_port
+          params:
+            $VM: { get_param: f5_b_name_0 }
+      network: { get_param: mgmt_net_id }
+      fixed_ips:
+        - ip_address: { get_param: f5_b_mgmt_ip_0 }
+      security_groups: { get_param: bigip_sec_groups }
+
+  # BIGIP HA ports
+  bigip_b_ha_0_port:
+    type: OS::Neutron::Port
+    properties:
+      name:
+        str_replace:
+          template: $VM_ha_port
+          params:
+            $VM: { get_param: f5_b_name_0 }
+      network: { get_param: int_ha_net_id }
+      fixed_ips:
+        - ip_address: { get_param: f5_b_int_ha_ip_0 }
+      security_groups: { get_param: bigip_sec_groups }
+
+  # BIGIP oam service network ports
+  bigip_b_oam_0_port:
+    type: OS::Neutron::Port
+    properties:
+      name:
+        str_replace:
+          template: $VM_oam_port
+          params:
+            $VM: { get_param: f5_b_name_0 }
+      network: { get_param: oam_net_id }
+      fixed_ips:
+        - ip_address: { get_param: f5_b_oam_ip_0 }
+      security_groups: { get_param: bigip_sec_groups }
+      allowed_address_pairs:
+        - ip_address: { get_param: f5_oam_vip_0 }
+
+  # BIGIP core service network ports
+  bigip_b_core_0_port:
+    type: OS::Neutron::Port
+    properties:
+      name:
+        str_replace:
+          template: $VM_core_port
+          params:
+            $VM: { get_param: f5_b_name_0 }
+      network: { get_param: core_net_id }
+      fixed_ips:
+        - ip_address: { get_param: f5_b_core_ip_0 }
+      security_groups: { get_param: bigip_sec_groups }
+      allowed_address_pairs:
+        - ip_address: { get_param: f5_core_vip_0 }
+
+  # BIGIP dmz service network ports
+  bigip_b_dmz_0_port:
+    type: OS::Neutron::Port
+    properties:
+      name:
+        str_replace:
+          template: $VM_dmz_port
+          params:
+            $VM: { get_param: f5_b_name_0 }
+      network: { get_param: dmz_net_id }
+      fixed_ips:
+        - ip_address: { get_param: f5_b_dmz_ip_0 }
+      security_groups: { get_param: bigip_sec_groups }
+      allowed_address_pairs:
+        - ip_address: { get_param: f5_dmz_vip_0 }
+
+  # Add any additional service ports here.
+
+  bigip_b_server_0:
+    type: OS::Nova::Server
+    properties:
+      name: { get_param: f5_b_name_0 }
+      image: { get_param: bigip_image_name }
+      flavor: { get_param: bigip_flavor_name }
+      key_name: { get_param: bigip_keypair }
+      scheduler_hints: { group: { get_param: bigip_server_group } }
+      metadata:
+        'vnf_id': { get_param: vnf_id }
+        'vm_role':
+            str_replace:
+              template: $ROLE_b
+              params:
+                $ROLE: { get_param: vm_role }
+        'vf_module_id': { get_param: vf_module_id }
+      networks:
+        - port: { get_resource: bigip_b_mgmt_0_port }
+        - port: { get_resource: bigip_b_oam_0_port }
+        - port: { get_resource: bigip_b_dmz_0_port }
+        - port: { get_resource: bigip_b_core_0_port }
+        - port: { get_resource: bigip_b_ha_0_port }
+      availability_zone: { get_param: availability_zone_1 }

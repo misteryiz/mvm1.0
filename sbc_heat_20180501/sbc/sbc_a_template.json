@@ -1,0 +1,77 @@
+// Orchestration file template for creating an HA Perimeta instance:
+// -  ISC
+// -  2 service interfaces.
+//
+//  - When $HEALING_OR_INSTANTIATION is set to <blank>, this template creates
+//    a running A instance and triggers parttnering with B instance.   This is
+//    used for initial instantiation.
+//  - When $HEALING_OR_INSTANTIATION is set to //, all the prefixed parameters
+//    are commented out and this template creates a minimally configured A
+//    instance ready for partnering from a B instance.   This is used in
+//    healing of an A instance.
+//
+//  - $41ORABOVE is used to include additional parameters that were exposed
+//    over the orchestration API in reease 4.1. It is configured in the
+//    environment file
+//    - it is set to <blank> to include the parameter when running 4.1+
+//    - it is set to // when running 4.0X to comment out the parameters.
+//    This flag controlls access to the following parameters
+//    - login_banner
+//    - motd (AT&T does not want this, so it is hard coded here)
+//    - Radius Authentication parameters, although see below
+//
+//  - $USRRADIUSAUTH is used to indicate whether RADIUS authentication is 
+//    enabled. 
+//    - it is set to <blank> to ebable RADIUS support and configure the various
+//      RADIUS configuration parameters
+//    - it is set to // when RADIUS is not being used to comment out the 
+//      parameters.
+//    Note that RADIUS configuration is only exposed if we are running a 4.1, 
+//    or above server hence the reason that this parameter is nested after the 
+//    parameter that indicates the server version 
+{
+    "vnic_assignment": {
+      "IBG1mgmt": {"mac": "$MGMT_MACADDR"},
+      "IPG1": {"mac": "$HA_MACADDR"},
+      "RPG1": {"mac": "$SIG_MACADDR"},
+      "RPG2": {"mac": "$MEDIA_MACADDR"}
+    },
+
+    // Note that the following parameters are all omitted when
+    // $HEALING_OR_INSTANTIATION is set to //
+    $HEALING_OR_INSTANTIATION "autocommission":"ISC",
+    $HEALING_OR_INSTANTIATION "autostart":"true",
+    $HEALING_OR_INSTANTIATION "autopartner":"",
+    $HEALING_OR_INSTANTIATION "ip_mgmt_global": "$VIRT_MGMT_IP_ADDR",
+    $HEALING_OR_INSTANTIATION "ip_mgmt_local": "$LOCAL_MGMT_IP_ADDR",
+    $HEALING_OR_INSTANTIATION "ip_mgmt_remote": "$REMOTE_MGMT_IP_ADDR",
+    $HEALING_OR_INSTANTIATION "ip_mgmt_plen": "$MGMT_NETWORK_PLEN",
+    $HEALING_OR_INSTANTIATION "ip_mgmt_gway": "$MGMT_NETWORK_DEFAULT_GATEWAY",
+    $HEALING_OR_INSTANTIATION "system_name": "$SYSTEM_NAME",
+    $HEALING_OR_INSTANTIATION "node_local": "$VM_NAME_A",
+    $HEALING_OR_INSTANTIATION "node_remote": "$VM_NAME_B",
+    $HEALING_OR_INSTANTIATION "ntp_servers": "$NTP_SERVER_IP_ADDRS",
+    $HEALING_OR_INSTANTIATION "perimeta": {
+    $HEALING_OR_INSTANTIATION   "dpdk_opt_enable":true
+    $HEALING_OR_INSTANTIATION },
+    $HEALING_OR_INSTANTIATION $41ORABOVE "login_banner" : ["Warning Notice","This system is restricted solely to AT&T authorized users for legitimate business purposes only. The actual or attempted unauthorized access, use, or modification of this system is strictly prohibited by AT&T. Unauthorized users are subject to Company disciplinary proceedings and/or criminal and civil penalties under state, federal, or other applicable domestic and foreign laws. The use of this system may be monitored and recorded for administrative and security reasons. Anyone accessing this system expressly consents to such monitoring and is advised that if monitoring reveals possible evidence of criminal activity, AT&T may provide the evidence of such activity to law enforcement officials. All users must comply with AT&T company policies regarding the protection of AT&T information assets. ",""],
+    $HEALING_OR_INSTANTIATION $41ORABOVE "motd" : "",
+    $HEALING_OR_INSTANTIATION $41ORABOVE $USERADIUSAUTH "external_authentication_type" : "RADIUS",
+    $HEALING_OR_INSTANTIATION $41ORABOVE $USERADIUSAUTH "radius_servers": [
+    $HEALING_OR_INSTANTIATION $41ORABOVE $USERADIUSAUTH {
+    $HEALING_OR_INSTANTIATION $41ORABOVE $USERADIUSAUTH   "server"        : "$RADIUS_SERVERNAME", 
+    $HEALING_OR_INSTANTIATION $41ORABOVE $USERADIUSAUTH   "port"          : $RADIUS_PORT,
+    $HEALING_OR_INSTANTIATION $41ORABOVE $USERADIUSAUTH   "shared_secret" : "$RADIUS_SECRET", 
+    $HEALING_OR_INSTANTIATION $41ORABOVE $USERADIUSAUTH   "timeout"       : $RADIUS_TIMEOUT
+    $HEALING_OR_INSTANTIATION $41ORABOVE $USERADIUSAUTH }
+    $HEALING_OR_INSTANTIATION $41ORABOVE $USERADIUSAUTH ],
+    $HEALING_OR_INSTANTIATION $41ORABOVE $USERADIUSAUTH "radius_default_permissions" : "$RADIUS_DEFAULT",
+
+    // There must be at least one normal parameter after those prefixed with
+    // $HEALING_OR_INSTANTIATION to avoid a trailing comma problem.
+    "ip_ha_local": "$LOCAL_HA_IP_ADDR",
+    "ip_ha_remote": "$REMOTE_HA_IP_ADDR",
+    "ip_ha_plen": "$HA_NETWORK_PLEN"
+
+    $COMPLETION_PARAMS
+}

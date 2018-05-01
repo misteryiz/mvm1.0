@@ -1,0 +1,116 @@
+heat_template_version: 2013-05-23
+
+description: >
+  Metaswitch MetaView Director(MVD) single node
+
+parameters:
+  mvd_names:
+    type: comma_delimited_list
+    description: Server name for the VM instance
+  vnf_id:
+    type: string
+    description: Unique ID for this VF instance
+  vf_module_id:
+    type: string
+    description: Unique ID for this VF_MODULE instance
+  mvd_image_name:
+    type: string
+    description: MVD master image_name volume
+  mvd_flavor_name:
+    type: string
+    description: Server flavor
+    constraints:
+      - custom_constraint: nova.flavor
+  vvm_key_id:
+    type: string
+    description: SSH key name
+    constraints:
+      - custom_constraint: nova.keypair
+  availability_zone_0:
+    type: string
+    description: Availability Zone ID or Name
+  sec_grp_vvm_0_id:
+    type: string
+    description: The ID of the security group
+  mgmt_net_id:
+    type: string
+    description: Neutron UUID for the Management network
+    constraints:
+    - custom_constraint: neutron.network
+  mvd_mgmt_ips:
+    type: comma_delimited_list
+    description: List of Management network IP addresses for IPv4
+  mvd_mgmt_vips:
+    type: string
+    description: Virtual management network ip address
+  mvd_int_ha_net_id:
+    type: string
+    description: Neutron UUID for the High Availability network
+    constraints:
+    - custom_constraint: neutron.network
+  mvd_ha_ips:
+    type: comma_delimited_list
+    description: List of High Availability network IP addresses for IPv4
+  indx:
+    type: number
+    description: Index of the current instance
+
+resources:
+  mvd_mgmt_0_port:
+    type: OS::Neutron::Port
+    properties:
+      name:
+        str_replace:
+          template: $SERVER_NAME_mgmt_port
+          params:
+            $SERVER_NAME: { get_param: [ mvd_names, { get_param: indx } ] }
+      network_id: { get_param: mgmt_net_id }
+      security_groups: [{ get_param: sec_grp_vvm_0_id }]
+      fixed_ips:
+        - ip_address: { get_param: [  mvd_mgmt_ips, { get_param: indx } ] }
+      allowed_address_pairs:
+        - ip_address: { get_param: mvd_mgmt_vips }
+
+  mvd_ha_0_port:
+    type: OS::Neutron::Port
+    properties:
+      name:
+        str_replace:
+          template: $SERVER_NAME_ha_port
+          params:
+            $SERVER_NAME: { get_param: [ mvd_names, { get_param: indx } ] }
+      network_id: { get_param: mvd_int_ha_net_id }
+      security_groups: [{ get_param: sec_grp_vvm_0_id }]
+      fixed_ips:
+        - ip_address: { get_param: [  mvd_ha_ips, { get_param: indx } ] }
+
+  mvd_data_volume_0:
+    type: OS::Cinder::Volume
+    properties:
+      size: 70
+      name:
+        str_replace:
+          template: $SERVER_NAME_data_volume
+          params:
+            $SERVER_NAME: { get_param: [ mvd_names, { get_param: indx } ] }
+
+  mvd_server_0:
+    type: OS::Nova::Server
+    properties:
+      name: { get_param: [ mvd_names, { get_param: indx } ] }
+      image: { get_param: mvd_image_name }
+      flavor: { get_param: mvd_flavor_name }
+      key_name: { get_param: vvm_key_id }
+      networks:
+        - port: { get_resource: mvd_mgmt_0_port }
+        - port: { get_resource: mvd_ha_0_port }
+      availability_zone: { get_param: availability_zone_0 }
+      metadata:
+        vf_module_id: { get_param: vf_module_id }
+        vnf_id: { get_param: vnf_id }
+
+  mvd_server_0_volume_attach:
+    type: OS::Cinder::VolumeAttachment
+    properties:
+      instance_uuid: { get_resource: mvd_server_0 }
+      volume_id: { get_resource: mvd_data_volume_0 }

@@ -1,0 +1,69 @@
+heat_template_version: 2013-05-23
+
+description: >
+  Metaswitch MSAS (Master Service Assurance Server)
+
+parameters:
+  msas_names:
+    type: comma_delimited_list
+    description: Server name for the VM instance
+  vnf_id:
+    type: string
+    description: Unique ID for this VF instance
+  vf_module_id:
+    type: string
+    description: Unique ID for this VF_MODULE instance
+  msas_image_name:
+    type: string
+    description: Master image_name volume id
+  msas_flavor_name:
+    type: string
+    description: Server flavor
+    constraints:
+      - custom_constraint: nova.flavor
+  vvm_key_id:
+    type: string
+    description: SSH key name
+    constraints:
+      - custom_constraint: nova.keypair
+  availability_zone_0:
+    type: string
+    description: Availability Zone ID or Name
+  sec_grp_vvm_0_id:
+    type: string
+    description: The ID of the security group
+  mgmt_net_id:
+    type: string
+    description: Neutron UUID for the Management network
+    constraints:
+    - custom_constraint: neutron.network
+  msas_mgmt_vips:
+    type: string
+    description: Virtual management network ip address
+  msas_mgmt_ips:
+    type: comma_delimited_list
+    description: List of Management network IP addresses for IPv4
+  msas_num_instances:
+    type: number
+    description: number of instance of the VF_module
+
+resources:
+  msas_modules:
+    type: OS::Heat::ResourceGroup
+    properties:
+      count: { get_param: msas_num_instances }
+      resource_def:
+        type: nested_2_mvm_msas.yaml
+        properties:
+          msas_names: { get_param: msas_names }
+          vnf_id: { get_param: vnf_id }
+          vf_module_id: { get_param: vf_module_id }
+          msas_image_name: { get_param: msas_image_name }
+          msas_flavor_name: { get_param: msas_flavor_name }
+          vvm_key_id: { get_param: vvm_key_id }
+          availability_zone_0: { get_param: availability_zone_0 }
+          sec_grp_vvm_0_id: { get_param: sec_grp_vvm_0_id }
+          mgmt_net_id: { get_param: mgmt_net_id }
+          msas_mgmt_vips: { get_param: msas_mgmt_vips }
+          msas_mgmt_ips: { get_param: msas_mgmt_ips }
+          indx: "%index%"

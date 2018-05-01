@@ -1,0 +1,73 @@
+heat_template_version: 2013-05-23
+
+description: >
+  Metaswitch MVS (Metaview Server)
+
+parameters:
+  mvs_names:
+    type: comma_delimited_list
+    description: Server name for the VM instance
+  vnf_id:
+    type: string
+    description: Unique ID for this VF instance
+  vf_module_id:
+    type: string
+    description: Unique ID for this VF_MODULE instance
+  mvs_image_name:
+    type: string
+    description: Master image_name volume id
+  mvs_flavor_name:
+    type: string
+    description: Server flavor
+    constraints:
+      - custom_constraint: nova.flavor
+  vvm_key_id:
+    type: string
+    description: SSH key name
+    constraints:
+      - custom_constraint: nova.keypair
+  availability_zone_0:
+    type: string
+    description: Availability Zone ID or Name
+  sec_grp_vvm_0_id:
+    type: string
+    description: The ID of the security group
+  mgmt_net_id:
+    type: string
+    description: Neutron UUID for the Management network
+    constraints:
+    - custom_constraint: neutron.network
+  mvs_mgmt_vips:
+    type: string
+    description: Virtual management network ip address
+  mvs_mgmt_ips:
+    type: comma_delimited_list
+    description: List of Management network IP addresses for IPv4
+  mvs_num_instances:
+    type: number
+    description: number of instance of the VF_module
+
+resources:
+  mvs_modules:
+    type: OS::Heat::ResourceGroup
+    properties:
+      count: { get_param: mvs_num_instances }
+      resource_def:
+        type: nested_5_mvm_mvs.yaml
+        properties:
+          mvs_names: { get_param: mvs_names }
+          vnf_id: { get_param: vnf_id }
+          vf_module_id: { get_param: vf_module_id }
+          mvs_image_name: { get_param: mvs_image_name }
+          mvs_flavor_name: { get_param: mvs_flavor_name }
+          vvm_key_id: { get_param: vvm_key_id }
+          availability_zone_0: { get_param: availability_zone_0 }
+          sec_grp_vvm_0_id: { get_param: sec_grp_vvm_0_id }
+          mgmt_net_id: { get_param: mgmt_net_id }
+          mvs_mgmt_vips: { get_param: mvs_mgmt_vips }
+          mvs_mgmt_ips: { get_param: mvs_mgmt_ips }
+          indx: "%index%"
+
+outputs:
+  oam_management_v4_address:
+    value: {get_param: mvs_mgmt_vips}

@@ -1,0 +1,87 @@
+heat_template_version: 2013-05-23
+
+description: >
+  Metaswitch RPAS (Representative Application Server) for use  with GR EAS only
+
+parameters:
+  rpas_names:
+    type: comma_delimited_list
+    description: Server name for the VM instance
+  vnf_id:
+    type: string
+    description: Unique ID for this VF instance
+  vf_module_id:
+    type: string
+    description: Unique ID for this VF_MODULE instance
+  rpas_image_name:
+    type: string
+    description: Master image_name volume id
+  rpas_flavor_name:
+    type: string
+    description: Server flavor
+    constraints:
+      - custom_constraint: nova.flavor
+  vvm_key_id:
+    type: string
+    description: SSH key name
+    constraints:
+      - custom_constraint: nova.keypair
+  availability_zone_0:
+    type: string
+    description: Availability Zone ID or Name
+  sec_grp_vvm_0_id:
+    type: string
+    description: The ID of the security group
+  mgmt_net_id:
+    type: string
+    description: Neutron UUID for the Management network
+    constraints:
+    - custom_constraint: neutron.network
+  rpas_mgmt_ips:
+    type: comma_delimited_list
+    description: List of Management network IP addresses for IPv4
+  sig_net_id:
+    type: string
+    description: Neutron UUID for the Signaling network
+    constraints:
+    - custom_constraint: neutron.network
+  rpas_a_sig_ips:
+    type: comma_delimited_list
+    description: List of Signaling network IP addresses for IPv4
+  rpas_b_sig_ips:
+    type: comma_delimited_list
+    description: List of Signaling network IP addresses for IPv4
+  rpas_a_sig_v6_ips:
+    type: comma_delimited_list
+    description: List of Signaling network IP addresses for IPv4
+  rpas_b_sig_v6_ips:
+    type: comma_delimited_list
+    description: List of Signaling network IP addresses for IPv4
+  rpas_num_instances:
+    type: number
+    description: number of instance of the VF_module
+
+resources:
+  rpas_modules:
+    type: OS::Heat::ResourceGroup
+    properties:
+      count: { get_param: rpas_num_instances }
+      resource_def:
+        type: nested_7_mvm_rpas.yaml
+        properties:
+          rpas_names: { get_param: rpas_names }
+          vnf_id: { get_param: vnf_id }
+          vf_module_id: { get_param: vf_module_id }
+          rpas_image_name: { get_param: rpas_image_name }
+          rpas_flavor_name: { get_param: rpas_flavor_name }
+          vvm_key_id: { get_param: vvm_key_id }
+          availability_zone_0: { get_param: availability_zone_0 }
+          sec_grp_vvm_0_id: { get_param: sec_grp_vvm_0_id }
+          mgmt_net_id: { get_param: mgmt_net_id }
+          rpas_mgmt_ips: { get_param: rpas_mgmt_ips }
+          sig_net_id: { get_param: sig_net_id }
+          rpas_a_sig_ips: { get_param: rpas_a_sig_ips }
+          rpas_b_sig_ips: { get_param: rpas_b_sig_ips }
+          rpas_a_sig_v6_ips: { get_param: rpas_a_sig_v6_ips }
+          rpas_b_sig_v6_ips: { get_param: rpas_b_sig_v6_ips }
+          indx: "%index%"

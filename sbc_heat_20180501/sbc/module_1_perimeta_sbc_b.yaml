@@ -1,0 +1,154 @@
+# Template for instantiating
+#  - 1 x HA SBC pair - B instance
+#
+# The Perimeta B instance is only configured with sufficient
+# configuration to allow partnering from the A instance (which will complete
+# the configuration).
+#
+# This template assumes that a base template stack has previously been
+# created so that deployment wide resources such as server-groups have been
+# defined.
+#
+heat_template_version: 2014-10-16
+
+description: >
+  HOT template to instantiate an B side Perimeta SBC 
+
+parameters:
+  # General VNF parameters
+  vnf_name:
+    type: string
+    description: Unique name for this VNF instance
+  vnf_id:
+    type: string
+    description: ID of VNF
+  vf_module_id:
+    type: string
+    description: Unique ID for this VF Module instance
+  # Availability zones
+  availability_zone_1:
+    type: string
+    description: Availability zone for B instances.
+  shared_perimeta_keypair:
+    type: string
+    description: Keypair to use for accessing this Perimeta instance
+  shared_perimeta_sec_groups:
+    type: comma_delimited_list
+    description: List of security groups to add on all interfaces.
+  shared_perimeta_sbc_server_group:
+    type: string
+    description: Server group to use for these VMs
+  # Internal network parameters
+  shared_int_ha_net_id:
+    type: string
+    description: HA network id
+    constraints:
+    - custom_constraint: neutron.network
+
+  # Constraint below is copied from base module 
+  shared_int_ha_net_prefix_len_v4:
+    type: number
+    description: Prefix length of subnet associated with internal HA network 
+    constraints:
+    - range: { min: 0, max: 31 }
+      description: shared_int_ha_net_prefix_len_v4 must be between 0 and 31
+  # Management network parameters
+  mgmt_net_id:
+    type: string
+    description: Management network ID
+    constraints:
+    - custom_constraint: neutron.network
+  # sig/core network parameters
+  sig_net_id:
+    type: string
+    description: Network ID of sig/core network.
+    constraints:
+    - custom_constraint: neutron.network
+  sig_subnet_id:
+    type: string
+    description: IPv4 SubNetwork ID of sig/core network.
+    constraints:
+    - custom_constraint: neutron.subnet
+  # media/access network parameters
+  media_net_id:
+    type: string
+    description: Network ID of media/access network.
+    constraints:
+    - custom_constraint: neutron.network
+  # SBC parameters
+  sbc_flavor_name:
+    type: string
+    description: Flavor to use for creating SBC VM instance
+    constraints:
+    - custom_constraint: nova.flavor
+  sbc_image_name:
+    type: string
+    description: Glance image to use for launching SBC Perimeta instances.
+    constraints:
+    - custom_constraint: glance.image
+  # SBC names of the physical B instance
+  sbc_b_name_0:
+    type: string
+    description: Name of VM B of SBC
+    constraints:
+    - allowed_pattern: '[a-zA-Z0-9][a-zA-Z0-9-]{0,29}$'
+      description: VM name must be 30 characters or less.  Only alphanumeric characters plus hyphen are allowed.
+  # SBC IP addresses on management network
+  sbc_mgmt_vip_0:
+    type: string
+    description: Management virtual IP address to use for SBC.
+  sbc_b_mgmt_ip_0:
+    type: string
+    description: Management fixed IP address to use for SBC B.
+  # SBC IP addresses on internal HA network
+  sbc_b_int_ha_ip_0:
+    type: string
+    description: HA fixed IP address to use for SBC B.
+  sbc_a_int_ha_ip_0:
+    type: string
+    description: HA fixed IP address to use for SBC A.
+  # SBC IP addresses on sig/core network
+  sbc_sig_v6_vip_0:
+    type: string
+    description: Virtual IPv6 address on sig/core network for SBC.
+  sbc_b_sig_v6_ip_0:
+    type: string
+    description: Fixed IPv6 address on sig/core network for SBC B.
+  # SBC IP addresses on media/access network
+  sbc_media_v6_vip_0:
+    type: string
+    description: Virtual IPv6 address on media/access network for SBC.
+  sbc_b_media_v6_ip_0:
+    type: string
+    description: Fixed IPv6 address on media/access network for SBC B.
+
+resources:
+  # Perimeta SBC
+  perimeta_sbc_b:
+    type: module_1_perimeta_ss_b_child.yaml
+    properties:
+      vnf_name: { get_param: vnf_name }
+      vnf_id: { get_param: vnf_id }
+      vm_role: 'isc'
+      vf_module_id: { get_param: vf_module_id }
+      sbc_b_name_0: { get_param: sbc_b_name_0 }
+      perimeta_image_name: { get_param: sbc_image_name }
+      perimeta_flavor_name: { get_param: sbc_flavor_name }
+      perimeta_keypair: { get_param: shared_perimeta_keypair }
+      availability_zone_1: { get_param: availability_zone_1 }
+      mgmt_net_id: { get_param: mgmt_net_id }
+      sbc_mgmt_vip_0: { get_param: sbc_mgmt_vip_0 }
+      sbc_b_mgmt_ip_0: { get_param: sbc_b_mgmt_ip_0 }
+      perimeta_sec_groups: { get_param: shared_perimeta_sec_groups }
+      int_ha_net_id: { get_param: shared_int_ha_net_id }
+      int_ha_network_plen: { get_param: shared_int_ha_net_prefix_len_v4 }
+      sbc_b_int_ha_ip_0: { get_param: sbc_b_int_ha_ip_0 }
+      sbc_a_int_ha_ip_0: { get_param: sbc_a_int_ha_ip_0 }
+      sig_net_id: { get_param: sig_net_id }
+      sig_subnet_id: { get_param: sig_subnet_id }
+      sbc_sig_v6_vip_0: { get_param: sbc_sig_v6_vip_0 }
+      sbc_b_sig_v6_ip_0: { get_param: sbc_b_sig_v6_ip_0 }
+      media_net_id: { get_param: media_net_id }
+      sbc_media_v6_vip_0: { get_param: sbc_media_v6_vip_0 }
+      sbc_b_media_v6_ip_0: { get_param: sbc_b_media_v6_ip_0 }
+      perimeta_server_group: { get_param: shared_perimeta_sbc_server_group }

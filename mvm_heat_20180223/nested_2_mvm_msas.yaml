@@ -1,0 +1,94 @@
+heat_template_version: 2013-05-23
+
+description: >
+  Metaswitch MSAS (Master Service Assurance Server)
+
+parameters:
+  msas_names:
+    type: comma_delimited_list
+    description: Server name for the VM instance
+  vnf_id:
+    type: string
+    description: Unique ID for this VF instance
+  vf_module_id:
+    type: string
+    description: Unique ID for this VF_MODULE instance
+  msas_image_name:
+    type: string
+    description: Master image_name volume id
+  msas_flavor_name:
+    type: string
+    description: Server flavor
+    constraints:
+      - custom_constraint: nova.flavor
+  vvm_key_id:
+    type: string
+    description: SSH key name
+    constraints:
+      - custom_constraint: nova.keypair
+  availability_zone_0:
+    type: string
+    description: Availability Zone ID or Name
+  sec_grp_vvm_0_id:
+    type: string
+    description: The ID of the security group
+  mgmt_net_id:
+    type: string
+    description: Neutron UUID for the Management network
+    constraints:
+    - custom_constraint: neutron.network
+  msas_mgmt_vips:
+    type: string
+    description: Virtual management network ip address
+  msas_mgmt_ips:
+    type: comma_delimited_list
+    description: List of Management network IP addresses for IPv4
+  indx:
+    type: number
+    description: Index of the current instance
+
+resources:
+  msas_mgmt_0_port:
+    type: OS::Neutron::Port
+    properties:
+      name:
+        str_replace:
+          template: $SERVER_NAME_mgmt_port
+          params:
+            $SERVER_NAME: { get_param: [ msas_names, { get_param: indx } ] }
+      network_id: { get_param: mgmt_net_id }
+      security_groups: [{ get_param: sec_grp_vvm_0_id }]
+      fixed_ips:
+        - ip_address: { get_param: [  msas_mgmt_ips, { get_param: indx } ] }
+      allowed_address_pairs:
+        - ip_address: { get_param: msas_mgmt_vips }
+
+  msas_data_volume_0:
+    type: OS::Cinder::Volume
+    properties:
+      size: 265
+      name:
+        str_replace:
+          template: $SERVER_NAME_data_volume
+          params:
+            $SERVER_NAME: { get_param: [ msas_names, { get_param: indx } ] }
+
+  msas_server_0:
+    type: OS::Nova::Server
+    properties:
+      name: { get_param: [ msas_names, { get_param: indx } ] }
+      image: { get_param: msas_image_name }
+      flavor: { get_param: msas_flavor_name }
+      key_name: { get_param: vvm_key_id }
+      networks:
+        - port: { get_resource: msas_mgmt_0_port }
+      availability_zone: { get_param: availability_zone_0 }
+      metadata:
+        vnf_id: { get_param: vnf_id }
+        vf_module_id: { get_param: vf_module_id }
+
+  msas_server_0_volume_attach:
+    type: OS::Cinder::VolumeAttachment
+    properties:
+      instance_uuid: { get_resource: msas_server_0 }
+      volume_id: { get_resource: msas_data_volume_0 }

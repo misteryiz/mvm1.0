@@ -1,0 +1,123 @@
+heat_template_version: 2013-05-23
+
+description: >
+  Metaswitch RPAS (Representative Application Server) for use  with GR EAS only
+
+parameters:
+  rpas_names:
+    type: comma_delimited_list
+    description: Server name for the VM instance
+  vnf_id:
+    type: string
+    description: Unique ID for this VF instance
+  vf_module_id:
+    type: string
+    description: Unique ID for this VF_MODULE instance
+  rpas_image_name:
+    type: string
+    description: Master image_name volume id
+  rpas_flavor_name:
+    type: string
+    description: Server flavor
+    constraints:
+      - custom_constraint: nova.flavor
+  vvm_key_id:
+    type: string
+    description: SSH key name
+    constraints:
+      - custom_constraint: nova.keypair
+  availability_zone_0:
+    type: string
+    description: Availability Zone ID or Name
+  sec_grp_vvm_0_id:
+    type: string
+    description: The ID of the security group
+  mgmt_net_id:
+    type: string
+    description: Neutron UUID for the Management network
+    constraints:
+    - custom_constraint: neutron.network
+  rpas_mgmt_ips:
+    type: comma_delimited_list
+    description: List of Management network IP addresses for IPv4
+  sig_net_id:
+    type: string
+    description: Neutron UUID for the Signaling network
+    constraints:
+    - custom_constraint: neutron.network
+  rpas_a_sig_ips:
+    type: comma_delimited_list
+    description: List of Signaling network IP addresses for IPv4
+  rpas_b_sig_ips:
+    type: comma_delimited_list
+    description: List of Signaling network IP addresses for IPv4
+  rpas_a_sig_v6_ips:
+    type: comma_delimited_list
+    description: List of Signaling network IP addresses for IPv4
+  rpas_b_sig_v6_ips:
+    type: comma_delimited_list
+    description: List of Signaling network IP addresses for IPv4
+  indx:
+    type: number
+    description: Index of the current instance
+
+resources:
+  rpas_mgmt_0_port:
+    type: OS::Neutron::Port
+    properties:
+      name:
+        str_replace:
+          template: $SERVER_NAME_mgmt_port
+          params:
+            $SERVER_NAME: { get_param: [ rpas_names, { get_param: indx } ] }
+      network_id: { get_param: mgmt_net_id }
+      security_groups: [{ get_param: sec_grp_vvm_0_id }]
+      fixed_ips:
+        - ip_address: { get_param: [ rpas_mgmt_ips, { get_param: indx } ] }
+
+  rpas_sig_0_port:
+    type: OS::Neutron::Port
+    properties:
+      name:
+        str_replace:
+          template: $SERVER_NAME_sig_port
+          params:
+            $SERVER_NAME: { get_param: [ rpas_names, { get_param: indx } ] }
+      network_id: { get_param: sig_net_id }
+      security_groups: [{ get_param: sec_grp_vvm_0_id }]
+      fixed_ips:
+        - ip_address: { get_param: [ rpas_a_sig_ips, { get_param: indx } ] }
+        - ip_address: { get_param: [ rpas_b_sig_ips, { get_param: indx } ] }
+        - ip_address: { get_param: [ rpas_a_sig_v6_ips, { get_param: indx } ] }
+        - ip_address: { get_param: [ rpas_b_sig_v6_ips, { get_param: indx } ] }
+
+  rpas_data_volume_0:
+    type: OS::Cinder::Volume
+    properties:
+      size: 70
+      name:
+        str_replace:
+          template: $SERVER_NAME_data_volume
+          params:
+            $SERVER_NAME: { get_param: [ rpas_names, { get_param: indx } ] }
+
+  rpas_server_0:
+    type: OS::Nova::Server
+    properties:
+      name: { get_param: [ rpas_names, { get_param: indx } ] }
+      image: { get_param: rpas_image_name }
+      availability_zone: { get_param: availability_zone_0 }
+      flavor: { get_param: rpas_flavor_name }
+      key_name: { get_param: vvm_key_id }
+      networks:
+        - port: { get_resource: rpas_mgmt_0_port }
+        - port: { get_resource: rpas_sig_0_port }
+      metadata:
+        vnf_id: { get_param: vnf_id }
+        vf_module_id: { get_param: vf_module_id }
+
+  rpas_server_0_volume_attach:
+    type: OS::Cinder::VolumeAttachment
+    properties:
+      instance_uuid: { get_resource: rpas_server_0 }
+      volume_id: { get_resource: rpas_data_volume_0 }
