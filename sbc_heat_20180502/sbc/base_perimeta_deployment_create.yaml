@@ -32,6 +32,11 @@ parameters:
     - range: { min: 0, max: 31 }
       description: int_ha_net_plen must be between 0 and 31
 
+  # Management virtual IPv4 address - needed by DCAE 
+  sbc_mgmt_floating_ip:
+    type: string
+    description: Management virtual IP address
+
 resources:
   # Resource Security Group
   shared_perimeta_rsg:
@@ -129,9 +134,6 @@ outputs:
     description: Perimeta SBC Server group
     value: { get_resource: shared_perimeta_sbc_server_gp}
 
-
-
-
   shared_perimeta_keypair:
     description: SSH keypair for deployment
     value: { get_resource: shared_perimeta_keypair }
@@ -148,4 +150,8 @@ outputs:
     description: HA internal network IPv4 prefix length
     value: { get_param: perimeta_int_ha_net_prefix_len_v4 }
 
+
+  oam_management_v4_address:
+    description: Management virtual IP address
+    value: { get_param: sbc_mgmt_floating_ip }
 
