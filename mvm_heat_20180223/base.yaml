@@ -1,0 +1,185 @@
+heat_template_version: 2015-04-30
+# Date: 09/01/17
+# Remark: Updated SG to include the explicit protocol 58 entries
+description: vvm base heat template
+
+parameters:
+  vnf_name:
+    type: string
+  ssh_public_key:
+    type: string
+  vn_forwarding_mode:
+    type: string
+  vn_rpf:
+    type: string
+  flood_unknown_unicast:
+    type: string
+  is_external:
+    type: boolean
+  multi_policy_service_chains_enabled:
+    type: boolean
+  is_shared:
+    type: boolean
+#  vvm_f5_ha_0_prefix_v4:
+#    type: string
+#  vvm_f5_ha_0_prefix_len_24:
+#    type: number
+#  vvm_f5_ha_0_enable_dhcp_false:
+#    type: boolean
+#  vvm__ha_1_prefix_v4:
+#    type: string
+#  vvm_ha_1_prefix_len_24:
+#    type: number
+#  vvm_ha_1_enable_dhcp_false:
+#    type: boolean
+  vvm_mvd_ha_2_prefix_v4:
+    type: string
+  vvm_mvd_ha_2_prefix_len_24:
+    type: number
+  vvm_mvd_ha_2_enable_dhcp_false:
+    type: boolean
+
+resources:
+#  template_NetworkIpam_Internal0:
+#    type: OS::ContrailV2::NetworkIpam
+#    properties:
+#      name:
+#        str_replace:
+#          template: $VNF_NAME_ipam_0
+#          params:
+#            $VNF_NAME: { get_param: vnf_name }
+# ha_net_0 is for F5
+#  ha_net_0:
+#    type: OS::ContrailV2::VirtualNetwork
+#    depends_on: [ template_NetworkIpam_Internal0 ]
+#    properties:
+#      name:
+#        str_replace:
+#          template: $VNF_NAME_int_ha_net_0
+#          params:
+#            $VNF_NAME: { get_param: vnf_name }
+#      virtual_network_properties:
+#        virtual_network_properties_rpf: { get_param: vn_rpf }
+#      is_shared: { get_param: is_shared }
+#      flood_unknown_unicast: { get_param: flood_unknown_unicast }
+#      network_ipam_refs:
+#        - get_resource: template_NetworkIpam_Internal0
+#      network_ipam_refs_data:
+#        - network_ipam_refs_data_ipam_subnets:
+#            - network_ipam_refs_data_ipam_subnets_subnet:
+#                network_ipam_refs_data_ipam_subnets_subnet_ip_prefix: { get_param: vvm_f5_ha_0_prefix_v4 }
+#                network_ipam_refs_data_ipam_subnets_subnet_ip_prefix_len: { get_param: vvm_f5_ha_0_prefix_len_24 }
+#              network_ipam_refs_data_ipam_subnets_enable_dhcp: { get_param: vvm_f5_ha_0_enable_dhcp_false }
+
+#  template_NetworkIpam_Internal1:
+#    type: OS::ContrailV2::NetworkIpam
+#    properties:
+#      name:
+#        str_replace:
+#          template: $VNF_NAME_ipam_1
+#          params:
+#            $VNF_NAME: { get_param: vnf_name }
+
+# ha_net_1 is for SBC
+#  ha_net_1:
+#    type: OS::ContrailV2::VirtualNetwork
+#    depends_on: [ template_NetworkIpam_Internal1 ]
+#    properties:
+#      name:
+#        str_replace:
+#          template: $VNF_NAME_int_ha_net_1
+#          params:
+#            $VNF_NAME: { get_param: vnf_name }
+#      virtual_network_properties:
+#        virtual_network_properties_rpf: { get_param: vn_rpf }
+#      is_shared: { get_param: is_shared }
+#      flood_unknown_unicast: { get_param: flood_unknown_unicast }
+#      network_ipam_refs:
+#        - get_resource: template_NetworkIpam_Internal1
+#      network_ipam_refs_data:
+#        - network_ipam_refs_data_ipam_subnets:
+#            - network_ipam_refs_data_ipam_subnets_subnet:
+#                network_ipam_refs_data_ipam_subnets_subnet_ip_prefix: { get_param: vvm_sbc_ha_0_prefix_v4 }
+#                network_ipam_refs_data_ipam_subnets_subnet_ip_prefix_len: { get_param: vvm_sbc_ha_0_prefix_len_24 }
+#              network_ipam_refs_data_ipam_subnets_enable_dhcp: { get_param: vvm_sbc_ha_0_enable_dhcp_false }
+
+# ha_net_2 is for MVD
+  template_NetworkIpam_Internal2:
+    type: OS::ContrailV2::NetworkIpam
+    properties:
+      name:
+        str_replace:
+          template: $VNF_NAME_ipam_2
+          params:
+            $VNF_NAME: { get_param: vnf_name }
+
+  ha_net_2:
+    type: OS::ContrailV2::VirtualNetwork
+    depends_on: [ template_NetworkIpam_Internal2 ]
+    properties:
+      name:
+        str_replace:
+          template: $VNF_NAME_int_ha_net_2
+          params:
+            $VNF_NAME: { get_param: vnf_name }
+      virtual_network_properties:
+        virtual_network_properties_rpf: { get_param: vn_rpf }
+      is_shared: { get_param: is_shared }
+      flood_unknown_unicast: { get_param: flood_unknown_unicast }
+      network_ipam_refs:
+        - get_resource: template_NetworkIpam_Internal2
+      network_ipam_refs_data:
+        - network_ipam_refs_data_ipam_subnets:
+            - network_ipam_refs_data_ipam_subnets_subnet:
+                network_ipam_refs_data_ipam_subnets_subnet_ip_prefix: { get_param: vvm_mvd_ha_2_prefix_v4 }
+                network_ipam_refs_data_ipam_subnets_subnet_ip_prefix_len: { get_param: vvm_mvd_ha_2_prefix_len_24 }
+              network_ipam_refs_data_ipam_subnets_enable_dhcp: { get_param: vvm_mvd_ha_2_enable_dhcp_false }
+
+  sec_grp_vvm_0:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      name:
+        str_replace:
+          template: $VNF_NAME_sec_grp_vvm_0
+          params:
+            $VNF_NAME: { get_param: vnf_name }
+      rules:
+        - {"direction": "egress", "remote_ip_prefix": "0.0.0.0/0", "protocol": "tcp", "ethertype": "IPv4", "port_range_max": 65535, "port_range_min": 0}
+        - {"direction": "egress", "remote_ip_prefix": "0.0.0.0/0", "protocol": "udp", "ethertype": "IPv4", "port_range_max": 65535, "port_range_min": 0}
+        - {"direction": "egress", "remote_ip_prefix": "0.0.0.0/0", "protocol": "icmp", "ethertype": "IPv4"}
+        - {"direction": "egress", "remote_ip_prefix": "::/0", "protocol": "tcp", "ethertype": "IPv6", "port_range_max": 65535, "port_range_min": 0}
+        - {"direction": "egress", "remote_ip_prefix": "::/0", "protocol": "udp", "ethertype": "IPv6", "port_range_max": 65535, "port_range_min": 0}
+        - {"direction": "egress", "remote_ip_prefix": "::/0", "protocol": "icmp", "ethertype": "IPv6"}
+        - {"direction": "ingress", "remote_ip_prefix": "0.0.0.0/0", "protocol": "tcp", "ethertype": "IPv4", "port_range_max": 65535, "port_range_min": 0}
+        - {"direction": "ingress", "remote_ip_prefix": "0.0.0.0/0", "protocol": "udp", "ethertype": "IPv4", "port_range_max": 65535, "port_range_min": 0}
+        - {"direction": "ingress", "remote_ip_prefix": "0.0.0.0/0", "protocol": "icmp", "ethertype": "IPv4"}
+        - {"direction": "ingress", "remote_ip_prefix": "::/0", "protocol": "tcp", "ethertype": "IPv6", "port_range_max": 65535, "port_range_min": 0}
+        - {"direction": "ingress", "remote_ip_prefix": "::/0", "protocol": "udp", "ethertype": "IPv6", "port_range_max": 65535, "port_range_min": 0}
+        - {"direction": "ingress", "remote_ip_prefix": "::/0", "protocol": "icmp", "ethertype": "IPv6"}
+        - {"direction": "ingress", "remote_ip_prefix": "::/0", "protocol": "58", "ethertype": "IPv6"}
+        - {"direction": "egress", "remote_ip_prefix": "::/0", "protocol": "58", "ethertype": "IPv6"}
+        - {"direction": "ingress", "remote_ip_prefix": "0.0.0.0/0", "protocol": "132", "ethertype": "IPv4"}
+        - {"direction": "egress", "remote_ip_prefix": "0.0.0.0/0", "protocol": "132", "ethertype": "IPv4"}
+
+  keypair_0:
+    type: OS::Nova::KeyPair
+    properties:
+      name:
+        str_replace:
+          template: $VNF_NAME_key_pair
+          params:
+            $VNF_NAME: { get_param: vnf_name }
+      public_key: {get_param: ssh_public_key}
+      save_private_key: false
+
+outputs:
+  sec_grp_vvm_0_id:
+    value: {get_resource: sec_grp_vvm_0 }
+#  f5_int_ha_net_id:
+#    value: {get_resource: ha_net_0 }
+#  sbc_int_ha_net_id:
+#    value: {get_resource: ha_net_1 }
+  mvd_int_ha_net_id:
+    value: {get_resource: ha_net_2 }
+  vvm_key_id:
+    value: {get_resource: keypair_0}
