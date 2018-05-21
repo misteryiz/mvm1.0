@@ -111,6 +111,9 @@ parameters:
   sbc_sig_v6_vip_0:
     type: string
     description: Virtual IPv6 address on sig/core network for SBC.
+  sbc_b_sig_ip_0:
+    type: string
+    description: Fixed IPv4 address on sig/core network for SBC B.
   sbc_b_sig_v6_ip_0:
     type: string
     description: Fixed IPv6 address on sig/core network for SBC B.
@@ -118,6 +121,9 @@ parameters:
   sbc_media_v6_vip_0:
     type: string
     description: Virtual IPv6 address on media/access network for SBC.
+  sbc_b_media_ip_0:
+    type: string
+    description: Fixed IPv4 address on media/access network for SBC B.
   sbc_b_media_v6_ip_0:
     type: string
     description: Fixed IPv6 address on media/access network for SBC B.
@@ -147,8 +153,10 @@ resources:
       sig_net_id: { get_param: sig_net_id }
       sig_subnet_id: { get_param: sig_subnet_id }
       sbc_sig_v6_vip_0: { get_param: sbc_sig_v6_vip_0 }
+      sbc_b_sig_ip_0: { get_param: sbc_b_sig_ip_0 }
       sbc_b_sig_v6_ip_0: { get_param: sbc_b_sig_v6_ip_0 }
       media_net_id: { get_param: media_net_id }
       sbc_media_v6_vip_0: { get_param: sbc_media_v6_vip_0 }
+      sbc_b_media_ip_0: { get_param: sbc_b_media_ip_0 }
       sbc_b_media_v6_ip_0: { get_param: sbc_b_media_v6_ip_0 }
       perimeta_server_group: { get_param: shared_perimeta_sbc_server_group }
