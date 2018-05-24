@@ -143,6 +143,9 @@ parameters:
     type: string
     description: HA fixed IP address to use for SBC B.
   # SBC IP addresses on sig/core network
+  sbc_sig_vip_0:
+    type: string
+    description: Virtual IPv4 address on sig/core network for SBC.
   sbc_sig_v6_vip_0:
     type: string
     description: Virtual IPv6 address on sig/core network for SBC.
@@ -153,6 +156,9 @@ parameters:
     type: string
     description: Fixed IPv6 address on sig/core network for SBC A.
   # SBC IP addresses on media/access network
+  sbc_media_vip_0:
+    type: string
+    description: Virtual IPv4 address on media/access network for SBC.
   sbc_media_v6_vip_0:
     type: string
     description: Virtual IPv6 address on media/access network for SBC.
@@ -255,10 +261,11 @@ resources:
       sbc_b_int_ha_ip_0: { get_param: sbc_b_int_ha_ip_0 }
       sig_net_id: { get_param: sig_net_id }
       sig_subnet_id: { get_param: sig_subnet_id }
-      sbc_sig_v6_vip_0: { get_param: sbc_sig_v6_vip_0 }
+      sbc_sig_vip_0: { get_param: sbc_sig_vip_0 }
       sbc_a_sig_ip_0: { get_param: sbc_a_sig_ip_0 }
       sbc_a_sig_v6_ip_0: { get_param: sbc_a_sig_v6_ip_0 }
       media_net_id: { get_param: media_net_id }
+      sbc_media_vip_0: { get_param: sbc_media_vip_0 }
       sbc_media_v6_vip_0: { get_param: sbc_media_v6_vip_0 }
       sbc_a_media_ip_0: { get_param: sbc_a_media_ip_0 }
       sbc_a_media_v6_ip_0: { get_param: sbc_a_media_v6_ip_0 }

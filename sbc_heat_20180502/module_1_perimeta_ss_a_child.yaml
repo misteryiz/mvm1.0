@@ -77,9 +77,12 @@ parameters:
   sig_subnet_id:
     type: string
     description: sig/core IPv4 subnetwork UUID
+  sbc_sig_vip_0:
+    type: string
+    description: sig/core alternate virtual IPv4 address
   sbc_sig_v6_vip_0:
     type: string
-    description: sig/core alternate virtual IP address
+    description: sig/core alternate virtual IPv6 address
   sbc_a_sig_ip_0:
     type: string
     description: Fixed IPv4 address to use as sig/core alternate fixed IPs of A instance.
@@ -92,9 +95,12 @@ parameters:
   media_net_id:
     type: string
     description: media/access network UUID
-  sbc_media_v6_vip_0:
+  sbc_a_media_vip_0:
     type: string
-    description: media/access alternate virtual IP address
+    description: media/access alternate virtual IPv4 address
+  sbc_a_media_v6_vip_0:
+    type: string
+    description: media/access alternate virtual IPv6 address
   sbc_a_media_ip_0:
     type: string
     description: Fixed IPv4 address to use as media/access alternate fixed IP of A instance.
@@ -162,6 +168,7 @@ resources:
         - ip_address: { get_param: sbc_a_sig_v6_ip_0 }
       security_groups: { get_param: perimeta_sec_groups }
       allowed_address_pairs:
+        - ip_address: { get_param: sbc_sig_vip_0 }
         - ip_address: { get_param: sbc_sig_v6_vip_0 }
 
   # Perimeta media/access service network ports
@@ -183,6 +190,7 @@ resources:
         - ip_address: { get_param: sbc_a_media_v6_ip_0 }
       security_groups: { get_param: perimeta_sec_groups }
       allowed_address_pairs:
+        - ip_address: { get_param: sbc_media_vip_0 }
         - ip_address: { get_param: sbc_media_v6_vip_0 }
 
   # Add any additional service ports here.
