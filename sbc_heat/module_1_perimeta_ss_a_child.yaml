@@ -95,10 +95,10 @@ parameters:
   media_net_id:
     type: string
     description: media/access network UUID
-  sbc_a_media_vip_0:
+  sbc_media_vip_0:
     type: string
     description: media/access alternate virtual IPv4 address
-  sbc_a_media_v6_vip_0:
+  sbc_media_v6_vip_0:
     type: string
     description: media/access alternate virtual IPv6 address
   sbc_a_media_ip_0:
