@@ -164,6 +164,7 @@ resources:
       sbc_b_sig_v6_ip_0: { get_param: sbc_b_sig_v6_ip_0 }
       media_net_id: { get_param: media_net_id }
       sbc_media_vip_0: { get_param: sbc_media_vip_0 }
+      sbc_media_v6_vip_0: { get_param: sbc_media_v6_vip_0 }
       sbc_b_media_ip_0: { get_param: sbc_b_media_ip_0 }
       sbc_b_media_v6_ip_0: { get_param: sbc_b_media_v6_ip_0 }
       perimeta_server_group: { get_param: shared_perimeta_sbc_server_group }
